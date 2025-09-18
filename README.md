@@ -16,4 +16,7 @@ if ($temasService.Status -eq 'Running') {
     Start-Service -Name Themes
 }
 
+#reinicia la computadora
+Restart-Computer -Force
+
 
