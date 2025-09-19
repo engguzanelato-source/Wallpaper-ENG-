@@ -1,57 +1,42 @@
-# ========== Configuração ==========
-$wallpaperUrl = "https://raw.githubusercontent.com/engguzanelato-source/Wallpaper-ENG-/main/ENG_Imagem.jpeg"
-$wallpaperPath = "$env:ProgramData\ENG_Imagem.jpeg"
-$logFile = "$env:ProgramData\wallpaper_apply.log"
-
-function Log($text) {
-    $line = "$(Get-Date -Format o) - $text"
-    Add-Content -Path $logFile -Value $line -Force
+# Criação do diretório onde o script será salvo
+$wallpaperDir = "C:\wallpaper"
+if (-not (Test-Path -Path $wallpaperDir)) {
+    New-Item -Path $wallpaperDir -ItemType Directory
 }
 
-Log "=== Início do script ==="
+# Definindo o caminho do script
+$scriptPath = "$wallpaperDir\mudar-wallpaper.ps1"
 
-# 1️⃣ Baixa a imagem
-try {
-    Log "Baixando imagem de $wallpaperUrl ..."
-    Invoke-WebRequest -Uri $wallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -ErrorAction Stop
-    Log "Imagem salva em $wallpaperPath"
-}
-catch {
-    Log "ERRO ao baixar imagem: $_"
-    exit 1
-}
+# Criando o conteúdo do script PowerShell que será salvo
+$scriptContent = @'
+$imageUrl = "https://drive.google.com/uc?export=download&id=171Lt7GApFBfHCp3P7_KKgM73AyPcZSgr"
+$imagePath = "C:\wallpaper\wallpaper.jpg"
 
-# 2️⃣ Atualiza o registro do usuário atual
-try {
-    $regPath = "HKCU:\Control Panel\Desktop"
-    Set-ItemProperty -Path $regPath -Name Wallpaper -Value $wallpaperPath -Force
-    Set-ItemProperty -Path $regPath -Name WallpaperStyle -Value "10" -Force   # 10 = Fill
-    Set-ItemProperty -Path $regPath -Name TileWallpaper -Value "0" -Force
-    Log "Registro atualizado para a sessão atual."
-}
-catch {
-    Log "ERRO atualizando registro: $_"
-}
+Invoke-WebRequest -Uri $imageUrl -OutFile $imagePath
 
-# 3️⃣ Atualiza o wallpaper imediatamente na sessão atual
-try {
-    Add-Type @"
+Add-Type @"
 using System.Runtime.InteropServices;
-public class WinAPI {
-    [DllImport("user32.dll",SetLastError=true)]
-    public static extern bool SystemParametersInfo(int uAction,int uParam,string lpvParam,int fuWinIni);
+public class NativeMethods {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
 }
 "@
 
-    $SPI_SETDESKWALLPAPER = 20
-    $SPIF_UPDATEINIFILE = 1
-    $SPIF_SENDWININICHANGE = 2
+[NativeMethods]::SystemParametersInfo(20, 0, $imagePath, 0x01 -bor 0x02)
+'@
 
-    [WinAPI]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $wallpaperPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDWININICHANGE) | Out-Null
-    Log "Wallpaper aplicado na sessão atual."
-}
-catch {
-    Log "ERRO aplicando wallpaper na sessão atual: $_"
-}
+# Salvando o script no diretório
+$scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8 -Force
+
+# Criando a tarefa agendada para rodar no login do usuário 'Aluno' de forma oculta
+$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$principal = New-ScheduledTaskPrincipal -UserId "ENG Aluno" -LogonType Interactive
+
+# Registrando a tarefa agendada
+Register-ScheduledTask -TaskName "AtualizarWallpaperAluno" -Action $action -Trigger $trigger -Principal $principal -Force
+
+Write-Host "Tarefa agendada com sucesso! Será executada silenciosamente no login do usuário ENG Aluno."
+
 
 Log "=== Script finalizado ==="
