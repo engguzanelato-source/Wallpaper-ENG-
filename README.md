@@ -11,7 +11,22 @@ $wallpaperPath = "$env:ProgramData\ENG_Imagem.jpeg"
 Invoke-WebRequest -Uri $wallpaperUrl -OutFile $wallpaperPath -UseBasicParsing
 
 # Configurar a imagem como papel de parede no Registro
-Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\" -Name wallpaper -Value $wallpaperPath
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name Wallpaper -Value $wallpaperPath
+
+# Força a atualização usando SystemParametersInfo
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class Wallpaper {
+  [DllImport("user32.dll", CharSet = CharSet.Auto)]
+  public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+}
+"@
+
+# 20 = SPI_SETDESKWALLPAPER
+# 0 = uParam
+# 3 = SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE (atualiza imediatamente)
+[Wallpaper]::SystemParametersInfo(20, 0, $wallpaperPath, 3)
 
 # Atualizar o papel de parede sem reiniciar
 RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
