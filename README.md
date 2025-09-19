@@ -1,7 +1,7 @@
 # ========== Configuração ==========
 $wallpaperUrl = "https://raw.githubusercontent.com/engguzanelato-source/Wallpaper-ENG-/main/ENG_Imagem.jpeg"
-$wallpaperPath = "C:\ProgramData\ENG_Imagem.jpeg"
-$logFile = "C:\ProgramData\wallpaper_apply.log"
+$wallpaperPath = "$env:ProgramData\ENG_Imagem.jpeg"
+$logFile = "$env:ProgramData\wallpaper_apply.log"
 
 function Log($text) {
     $line = "$(Get-Date -Format o) - $text"
@@ -21,46 +21,19 @@ catch {
     exit 1
 }
 
-# 2️⃣ Detecta usuários ativos e/ou carregados
+# 2️⃣ Atualiza o registro do usuário atual
 try {
-    $loggedUsers = Get-CimInstance Win32_LoggedOnUser | ForEach-Object {
-        $_.Antecedent -replace '.*Domain="([^"]+)",Name="([^"]+)".*','$1\$2'
-    } | Sort-Object -Unique
-
-    if (-not $loggedUsers) {
-        Log "Nenhum usuário ativo encontrado."
-        exit 1
-    }
-    Log "Usuários ativos detectados: $($loggedUsers -join ', ')"
+    $regPath = "HKCU:\Control Panel\Desktop"
+    Set-ItemProperty -Path $regPath -Name Wallpaper -Value $wallpaperPath -Force
+    Set-ItemProperty -Path $regPath -Name WallpaperStyle -Value "10" -Force   # 10 = Fill
+    Set-ItemProperty -Path $regPath -Name TileWallpaper -Value "0" -Force
+    Log "Registro atualizado para a sessão atual."
 }
 catch {
-    Log "ERRO detectando usuários: $_"
-    exit 1
+    Log "ERRO atualizando registro: $_"
 }
 
-# 3️⃣ Atualiza o registro para cada usuário
-foreach ($user in $loggedUsers) {
-    try {
-        $nt = New-Object System.Security.Principal.NTAccount($user)
-        $sid = $nt.Translate([System.Security.Principal.SecurityIdentifier]).Value
-        $regPath = "Registry::HKEY_USERS\$sid\Control Panel\Desktop"
-
-        if (-not (Test-Path $regPath)) {
-            New-Item -Path $regPath -Force | Out-Null
-            Log "Criada chave de registro: $regPath"
-        }
-
-        Set-ItemProperty -Path $regPath -Name Wallpaper -Value $wallpaperPath -Force
-        Set-ItemProperty -Path $regPath -Name WallpaperStyle -Value "10" -Force
-        Set-ItemProperty -Path $regPath -Name TileWallpaper -Value "0" -Force
-        Log "Wallpaper aplicado para $user (SID: $sid)"
-    }
-    catch {
-        Log "ERRO atualizando registro de $user: $_"
-    }
-}
-
-# 4️⃣ Força atualização do wallpaper na sessão atual (se possível)
+# 3️⃣ Atualiza o wallpaper imediatamente na sessão atual
 try {
     Add-Type @"
 using System.Runtime.InteropServices;
@@ -75,10 +48,10 @@ public class WinAPI {
     $SPIF_SENDWININICHANGE = 2
 
     [WinAPI]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $wallpaperPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDWININICHANGE) | Out-Null
-    Log "Wallpaper atualizado na sessão atual (se houver)."
+    Log "Wallpaper aplicado na sessão atual."
 }
 catch {
-    Log "ERRO atualizando wallpaper na sessão atual: $_"
+    Log "ERRO aplicando wallpaper na sessão atual: $_"
 }
 
-Log "Script finalizado."
+Log "=== Script finalizado ==="
