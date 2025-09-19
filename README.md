@@ -1,14 +1,19 @@
-# Caminho do papel de parede (pode ser local ou baixado da internet)
-$wallpaperUrl = "https://share.google/p3rzS65lZgfN867ls"
-$wallpaperPath = "$env:ProgramData\wallpaper.jpeg"
+# Script para trocar o papel de parede remotamente via Deep Freeze Cloud
 
-# Baixar o papel de parede da URL
-Invoke-WebRequest - "https://share.google/p3rzS65lZgfN867ls"
+# Caminho RAW da imagem hospedada no GitHub
+# ⚠️ Depois que subir o repositório, troque SEU_USUARIO e SEU_REPOSITORIO abaixo:
+$wallpaperUrl = "https://raw.githubusercontent.com/engguzanelato-source/Wallpaper-ENG-/main/ENG_Imagem.jpeg"
 
-# Definir o papel de parede no Registro
+# Caminho local onde a imagem será salva
+$wallpaperPath = "$env:ProgramData\ENG_Imagem.jpeg"
+
+# Baixar a imagem do GitHub para a máquina remota
+Invoke-WebRequest -Uri $wallpaperUrl -OutFile $wallpaperPath -UseBasicParsing
+
+# Configurar a imagem como papel de parede no Registro
 Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\" -Name wallpaper -Value $wallpaperPath
 
-# Forçar atualização imediata do papel de parede
+# Atualizar o papel de parede sem reiniciar
 RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
 
 
