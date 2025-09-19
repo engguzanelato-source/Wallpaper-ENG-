@@ -1,6 +1,6 @@
 # Wallpaper-ENG-
 # Ruta de la imagen del fondo de pantalla
-$imagenFondo = "C:\Users\engla\OneDrive\Imagens\Capa para chamadas.png"
+$imagenFondo = "C:\User\engla\OneDrive\Imagem ENG.jpg"
 
 # Obtener la ubicación del archivo de configuración de temas de Windows
 $rutaConfiguracion = "$env:APPDATA\Microsoft\Windows\Themes\TranscodedWallpaper"
