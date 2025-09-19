@@ -1,13 +1,13 @@
 # Cambia el fondo de pantalla del escritorio
 
 # crea la carpeta si no existe
-$carpeta = "C:\Users\engla\OneDrive\Imagens\ENG Imagem.jpeg"
+$carpeta = "C:\ENG Imagem.jpeg"
 If(!(test-path -PathType container $carpeta)){
   New-Item -ItemType Directory -Path $carpeta
 }
 # Se descarga la imagen
-$address = "https://raw.githubusercontent.com/engguzanelato-source/Wallpaper-ENG-/edit/main/C:\Users\engla\OneDrive\Imagens\ENG Imagem.jpeg"
-$fileName = "C:\Users\engla\OneDrive\Imagens\ENG Imagem.jpeg"
+$address = "https://github.com/engguzanelato-source/Wallpaper-ENG-/edit/main/README.md"
+$fileName = "$carpeta\ENG Imagem.jpeg"
 (New-Object System.Net.WebClient).DownloadFile($address, $fileName)
 
 # Informacion del fondo de escritorio del registro del usuario actual
