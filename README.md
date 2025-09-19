@@ -1,34 +1,35 @@
-# Script para trocar o papel de parede remotamente via Deep Freeze Cloud
-
-# Caminho RAW da imagem hospedada no GitHub
-# ⚠️ Depois que subir o repositório, troque SEU_USUARIO e SEU_REPOSITORIO abaixo:
+# Caminho RAW da imagem no GitHub
 $wallpaperUrl = "https://raw.githubusercontent.com/engguzanelato-source/Wallpaper-ENG-/main/ENG_Imagem.jpeg"
-
-# Caminho local onde a imagem será salva
 $wallpaperPath = "$env:ProgramData\ENG_Imagem.jpeg"
 
-# Baixar a imagem do GitHub para a máquina remota
+# Baixa a imagem
 Invoke-WebRequest -Uri $wallpaperUrl -OutFile $wallpaperPath -UseBasicParsing
 
-# Configurar a imagem como papel de parede no Registro
-Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name Wallpaper -Value $wallpaperPath
+# Pega o usuário logado na sessão ativa
+$ActiveUser = (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty UserName)
 
-# Força a atualização usando SystemParametersInfo
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Wallpaper {
-  [DllImport("user32.dll", CharSet = CharSet.Auto)]
-  public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
-}
+if ($ActiveUser) {
+    # Extrai o SID do usuário ativo
+    $SID = (New-Object System.Security.Principal.NTAccount($ActiveUser)).Translate([System.Security.Principal.SecurityIdentifier]).Value
+    $RegPath = "Registry::HKEY_USERS\$SID\Control Panel\Desktop"
+
+    # Define o papel de parede no registro do usuário ativo
+    Set-ItemProperty -Path $RegPath -Name Wallpaper -Value $wallpaperPath
+
+    # Força atualização usando SystemParametersInfo no contexto do usuário
+    $sig = @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class Wallpaper {
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+    }
 "@
+    Add-Type $sig
+    [Wallpaper]::SystemParametersInfo(20, 0, $wallpaperPath, 3)
 
-# 20 = SPI_SETDESKWALLPAPER
-# 0 = uParam
-# 3 = SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE (atualiza imediatamente)
-[Wallpaper]::SystemParametersInfo(20, 0, $wallpaperPath, 3)
-
-# Atualizar o papel de parede sem reiniciar
-RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
-
-
+    Write-Output "Wallpaper aplicado para o usuário $ActiveUser"
+}
+else {
+    Write-Output "Nenhum usuário ativo encontrado. O script executou como SYSTEM."
+}
