@@ -1,22 +1,14 @@
-# Wallpaper-ENG-
-# Ruta de la imagen del fondo de pantalla
-$imagenFondo = "C:\User\engla\OneDrive\Imagem ENG.jpg"
+# Caminho do papel de parede (pode ser local ou baixado da internet)
+$wallpaperUrl = "https://share.google/p3rzS65lZgfN867ls"
+$wallpaperPath = "$env:ProgramData\wallpaper.jpeg"
 
-# Obtener la ubicación del archivo de configuración de temas de Windows
-$rutaConfiguracion = "$env:APPDATA\Microsoft\Windows\Themes\TranscodedWallpaper"
+# Baixar o papel de parede da URL
+Invoke-WebRequest - "https://share.google/p3rzS65lZgfN867ls"
 
-# Copiar la imagen del fondo de pantalla a la ubicación del archivo de configuración
-Copy-Item -Path $imagenFondo -Destination $rutaConfiguracion -Force
+# Definir o papel de parede no Registro
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\" -Name wallpaper -Value $wallpaperPath
 
-# Reiniciar el servicio de Temas de Windows para aplicar los cambios
-$temasService = Get-Service -Name Themes
-if ($temasService.Status -eq 'Running') {
-    Restart-Service -Name Themes -Force
-} else {
-    Start-Service -Name Themes
-}
-
-#reinicia la computadora
-Restart-Computer -Force
+# Forçar atualização imediata do papel de parede
+RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
 
 
