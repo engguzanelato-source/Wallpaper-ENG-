@@ -1,13 +1,13 @@
 # Cambia el fondo de pantalla del escritorio
 
 # crea la carpeta si no existe
-$carpeta = "C:\Imagens\ENG Imagem.jpeg"
+$carpeta = "C:\wallpaper2"
 If(!(test-path -PathType container $carpeta)){
   New-Item -ItemType Directory -Path $carpeta
 }
 # Se descarga la imagen
-$address = "https://github.com/engguzanelato-source/Wallpaper-ENG-/edit/main/README.md"
-$fileName = "$carpeta\C:\Imagens\ENG Imagem.jpeg"
+$address = "https://wallpapers.com/images/hd/3840x2160-uhd-4k-desktop-z7g53ku4ein7vaiq.jpg"
+$fileName = "$carpeta\vancouver.jpg"
 (New-Object System.Net.WebClient).DownloadFile($address, $fileName)
 
 # Informacion del fondo de escritorio del registro del usuario actual
@@ -19,3 +19,4 @@ Set-ItemProperty -Path $path -Name WallPaper -Value $fileName
 
 # es necesario reiniciar la computadora para que muestre los cambios
 Restart-Computer -Force
+
