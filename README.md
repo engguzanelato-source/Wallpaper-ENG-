@@ -1,22 +1,28 @@
-# Cambia el fondo de pantalla del escritorio
+$RegKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
 
-# crea la carpeta si no existe
-$carpeta = "C:\wallpaper2"
-If(!(test-path -PathType container $carpeta)){
-  New-Item -ItemType Directory -Path $carpeta
+$DesktopPath = "DesktopImagePath"
+$DesktopStatus = "DesktopImageStatus"
+$DesktopUrl = "DesktopImageUrl"
+
+$StatusValue = "1"
+
+$url = "https://wallpapers.com/images/hd/surreal-4k-pc-clouds-7kk9qb45xrj672gu.jpg"
+$DesktopImageValue = "C:\Fondo\MerryChristmas-1920.jpg"
+$directory = "C:\Fondo\"
+
+New-Item -Path $directory -ItemType directory -Force
+
+$wc = New-Object System.Net.WebClient
+$wc.DownloadFile($url, $DesktopImageValue)
+
+if (!(Test-Path $RegKeyPath))
+{
+Write-Host "Creating registry path $($RegKeyPath)."
+New-Item -Path $RegKeyPath -Force | Out-Null
 }
-# Se descarga la imagen
-$address = "https://wallpapers.com/images/hd/3840x2160-uhd-4k-desktop-z7g53ku4ein7vaiq.jpg"
-$fileName = "$carpeta\vancouver.jpg"
-(New-Object System.Net.WebClient).DownloadFile($address, $fileName)
 
-# Informacion del fondo de escritorio del registro del usuario actual
-# Importante: este script debe ejecutarse con la cuenta del usuario, por lo del HKCU.
-$path = "HKCU:\Control Panel\Desktop"
+New-ItemProperty -Path $RegKeyPath -Name $DesktopStatus -Value $StatusValue -PropertyType DWORD -Force | Out-Null
+New-ItemProperty -Path $RegKeyPath -Name $DesktopPath -Value $DesktopImageValue -PropertyType STRING -Force | Out-Null
+New-ItemProperty -Path $RegKeyPath -Name $DesktopUrl -Value $DesktopImageValue -PropertyType STRING -Force | Out-Null
 
-# Cambia el wallpaper al cambiar el registro de windows
-Set-ItemProperty -Path $path -Name WallPaper -Value $fileName
-
-# es necesario reiniciar la computadora para que muestre los cambios
-Restart-Computer -Force
-
+RUNDLL32.EXE USER32.DLL, UpdatePerUserSystemParameters 1, True
